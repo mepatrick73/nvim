@@ -14,6 +14,8 @@ return {
                 vim.lsp.buf.code_action({ context = { only = { "quickfix", "refactor", "source" } } })
             end)
 
+
+            vim.keymap.set("n", "<leader><C-o>", "<cmd>ClangdSwitchSourceHeader<cr>")
             vim.keymap.set("n", "gd", require("telescope.builtin").lsp_definitions)
             vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references)
             vim.keymap.set("n", "gI", require("telescope.builtin").lsp_implementations)
