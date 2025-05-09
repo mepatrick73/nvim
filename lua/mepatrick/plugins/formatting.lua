@@ -6,7 +6,7 @@ return {
         require("conform").setup({
             formatters_by_ft = {
                 python = { "autopep8" },
-                javascript = { { "prettierd", "prettier" } },
+                javascript = { "prettierd", "prettier" },
             },
             format_on_save = {
                 lsp_fallback = true,

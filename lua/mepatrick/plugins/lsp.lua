@@ -43,20 +43,26 @@ return {
                 vim.lsp.buf.format()
             end, { desc = "Format current buffer with LSP" })
         end
-        local blink_capabilities = require('blink.cmp').get_lsp_capabilities();
-        local capabilities = vim.tbl_deep_extend(
-            "force",
-            {},
-            vim.lsp.protocol.make_client_capabilities(),
-            blink_capabilities
-        )
+
+
+        local capabilities = vim.lsp.protocol.make_client_capabilities()
+
+        capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').get_lsp_capabilities({}, false))
+
+        capabilities = vim.tbl_deep_extend('force', capabilities, {
+            textDocument = {
+                foldingRange = {
+                    dynamicRegistration = false,
+                    lineFoldingOnly = true
+                }
+            }
+        })
 
         require("fidget").setup({})
         require("mason").setup({})
         require("mason-tool-installer").setup({
             ensure_installed = {
                 "ruff",
-                "mypy",
                 "eslint_d",
                 "stylua",
                 "prettierd",
@@ -67,72 +73,56 @@ return {
         require("mason-lspconfig").setup({
             ensure_installed = {
                 "lua_ls",
-                "rust_analyzer",
-                "wgsl_analyzer",
-                "tsserver",
                 "pyright",
                 "clangd",
                 "taplo",
             },
-            handlers = {
-                function(server_name) -- default handler
-                    require("lspconfig")[server_name].setup({
-                        capabilities = capabilities,
-                        on_attach = on_attach,
-                    })
-                end,
-                ["lua_ls"] = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.lua_ls.setup({
-                        capabilities = capabilities,
-                        on_attach = on_attach,
-                        settings = {
-                            Lua = {
-                                diagnostics = {
-                                    globals = { "vim", "it", "describe", "before_each", "after_each" },
-                                },
-                            },
-                        },
-                    })
-                end,
-                ["clangd"] = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.clangd.setup({
-                        capabilities = capabilities,
-                        on_attach = on_attach,
-                        cmd = {
-                            "clangd",
-                            "--fallback-style=WebKit"
-                        },
-                    })
-                end,
-                ["rust_analyzer"] = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.rust_analyzer.setup({
-                        capabilities = capabilities,
-                        on_attach = on_attach,
-                        settings = {
-                            ["rust-analyzer"] = {
-                                cargo = {
-                                    autoreload = true,
-                                },
-                                --checkOnSave = {
-                                --    command = "clippy",
-                                --},
-                                checkOnSave = {
-                                    extraArgs = { "--target-dir", "/tmp/rust-analyzer-check" }
-                                },
-                                procMacro = {
-                                    enable = true,
-                                },
-                            },
-                        },
-                        root_dir = function(fname)
-                            return lspconfig.util.root_pattern("Cargo.toml")(fname) or lspconfig.util.path.dirname(fname)
-                        end,
-                    })
-                end
+
+        })
+
+        vim.lsp.config('lua_ls', {
+            settings = {
+                Lua = {
+                    diagnostics = {
+                        globals = { "vim", "it", "describe", "before_each", "after_each" },
+                    },
+                },
             },
+        })
+
+        vim.lsp.config('clangd', {
+            cmd = {
+                "clangd",
+                "--fallback-style=Google"
+            },
+        })
+
+        vim.lsp.config('rust_analyzer', {
+            settings = {
+                ["rust-analyzer"] = {
+                    cargo = {
+                        autoreload = true,
+                    },
+                    --checkOnSave = {
+                    --    command = "clippy",
+                    --},
+                    checkOnSave = {
+                        extraArgs = { "--target-dir", "/tmp/rust-analyzer-check" }
+                    },
+                    procMacro = {
+                        enable = true,
+                    },
+                },
+            },
+            root_dir = function(fname)
+                local lspconfig = require("lspconfig")
+                return lspconfig.util.root_pattern("Cargo.toml")(fname) or lspconfig.util.path.dirname(fname)
+            end,
+        })
+
+        vim.lsp.config('*', {
+            capabilities = capabilities,
+            on_attach = on_attach,
         })
 
 
